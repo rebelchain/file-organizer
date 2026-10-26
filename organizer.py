@@ -1,3 +1,4 @@
+import shutil
 from pathlib import Path
 import tempfile
 
@@ -68,42 +69,26 @@ def resolve_collision(destination_folder: Path, file_name: str) -> Path:
 
     counter += 1
 
-if __name__ == "__main__":
 
-  with tempfile.TemporaryDirectory() as temp_dir:
-    base_dir = Path(temp_dir)
-    print(f"Temporary test directory: {base_dir}\n")
 
-    test_files = [
-      "final_document.pdf", # get in "Documents"
-      "holiday_photo.PNG", # get in "Images" (case-insensitive test)
-      "arsip_lama.zip", # get in "Archives"
-      "secret_notes" # get in "Others" (no extension)
-    ]
 
-    print("---- Test 1: Determination  of Category & Initial Path -----")
-    for filename in test_files:
-      file_path = Path(filename)
-      category = get_category(file_path.suffix)
-      dest_folder = base_dir / category
-      dest_folder.mkdir(parents=True, exist_ok=True)
 
-      safe_path = resolve_collision(dest_folder, file_path.name)
-      print(f"File: {filename:<18} -> Folder: {category:<10} -> Target: {safe_path.name}")
 
-      print(f"--- Tes 2: Collision Simulation ----")
+def move_file(source_path: Path, destination_path: Path, dry_run: bool = False) -> Path:
+  """
+  Move file to the destination path securely
 
-      docs_folder = base_dir / "Documents"
+  if dry_run == True, only print simulation without modifying the disk.
+  Returns the destination_path used.
+  """
 
-      file_1 = docs_folder / "laporan.pdf"
-      file_1.touch()
-      print(f"Create Dummy: {file_1.name} already exist in destination folder.")
+  if dry_run:
+    print(f"DRY RUN: Relocation plan: {source_path} -> {destination_path}")
+    return destination_path
 
-      target_aman_1 = resolve_collision(docs_folder, "laporan.pdf")
-      print(f"collision resolution 1: {target_aman_1.name}")
+  destination_path.parent.mkdir(parents=True, exist_ok=True)
 
-      target_aman_1.touch()
-      print(f"create dummy: {target_aman_1} file was intentionally created on the disk.")
+  shutil.move(str(source_path), str(destination_path))
+  print(f"Moved: {source_path.name} -> {destination_path}")
 
-      target_aman_2 = resolve_collision(docs_folder, "laporan.pdf")
-      print(f"collision resolution 3: {target_aman_2.name}")
+  return destination_path
