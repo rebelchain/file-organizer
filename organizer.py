@@ -14,10 +14,36 @@ def get_category(extension: str) -> str:
   lower_extension = extension.lower()
 
   for category, ext_list in CATEGORIES.items():
-     if lower_extension == ext_list:
+     if lower_extension in ext_list:
        return category
 
   return "Others"
+
+
+
+
+def scan_directory(target_path: Path) -> list[Path]:
+  """scan target directory and return list of files that are valid to be moved. 
+  
+    Ignoring subdirectories and hidden files.
+  """
+
+  if not target_path.exists():
+    raise FileNotFoundError(f"'{target_path} directory is not found in the system'")
+
+  if not target_path.is_dir():
+    raise NotADirectoryError(f"'{target_path}' path is not directory or folder")
+
+  valid_files: list[Path] = []
+
+  for item in target_path.iterdir():
+    if item.is_file() and not item.name.startswith("."):
+      valid_files.append(item)
+
+  return valid_files
+
+
+
 
 
 def resolve_collision(destination_folder: Path, file_name: str) -> Path:
@@ -64,3 +90,20 @@ if __name__ == "__main__":
 
       safe_path = resolve_collision(dest_folder, file_path.name)
       print(f"File: {filename:<18} -> Folder: {category:<10} -> Target: {safe_path.name}")
+
+      print(f"--- Tes 2: Collision Simulation ----")
+
+      docs_folder = base_dir / "Documents"
+
+      file_1 = docs_folder / "laporan.pdf"
+      file_1.touch()
+      print(f"Create Dummy: {file_1.name} already exist in destination folder.")
+
+      target_aman_1 = resolve_collision(docs_folder, "laporan.pdf")
+      print(f"collision resolution 1: {target_aman_1.name}")
+
+      target_aman_1.touch()
+      print(f"create dummy: {target_aman_1} file was intentionally created on the disk.")
+
+      target_aman_2 = resolve_collision(docs_folder, "laporan.pdf")
+      print(f"collision resolution 3: {target_aman_2.name}")
