@@ -1,4 +1,5 @@
 import shutil
+import logging
 from pathlib import Path
 import tempfile
 
@@ -7,6 +8,36 @@ CATEGORIES = {
   "Documents": [".pdf", ".docx", ".txt", ".txt", ".xlsx"],
   "Archives": [".zip", ".rar", ".tar", ".gz"] 
 }
+
+
+
+def setup_logger(log_file: Path = Path("organizer.log")) -> logging.Logger:
+  """Configuring logger to log to file and display to the console"""
+
+  logger = logging.getLogger("FileOrganizer")
+  logger.setLevel(logging.INFO)
+
+  if logger.handlers:
+    return logger
+
+  formatter = logging.Formatter("[%(asctime)s] [%(levelname)s] %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
+
+  file_handler = logging.FileHandler(log_file, encoding="utf-8")
+  file_handler.setFormatter(formatter)
+  logger.addHandler(file_handler)
+
+  console_handler = logging.StreamHandler()
+  console_handler.setFormatter(formatter)
+  logger.addHandler(console_handler)
+
+  return logger
+
+
+
+
+
+
+
 
 def get_category(extension: str) -> str:
   if not extension:
@@ -74,21 +105,82 @@ def resolve_collision(destination_folder: Path, file_name: str) -> Path:
 
 
 
-def move_file(source_path: Path, destination_path: Path, dry_run: bool = False) -> Path:
-  """
-  Move file to the destination path securely
-
-  if dry_run == True, only print simulation without modifying the disk.
-  Returns the destination_path used.
+def move_file(source_path: Path, destination_path: Path, dry_run: bool = False, logger: logging.Logger | None = None) -> bool:
   """
 
+  Move file to the destination path securely with defensive exception handling
+
+  return True if success or simulation success, False if fail happen
+  """
+
+  log = logger or logging.getLogger("FIleOrganizer")
   if dry_run:
-    print(f"DRY RUN: Relocation plan: {source_path} -> {destination_path}")
-    return destination_path
+    log.info(f"DRY RUN: Relocation plan: {source_path} -> {destination_path}")
+    return True
 
-  destination_path.parent.mkdir(parents=True, exist_ok=True)
+  try:
+    destination_path.parent.mkdir(parents=True, exist_ok=True)
 
-  shutil.move(str(source_path), str(destination_path))
-  print(f"Moved: {source_path.name} -> {destination_path}")
+    shutil.move(str(source_path), str(destination_path))
+    log.info(f"Moved: {source_path.name} -> {destination_path}")
+    return True
 
-  return destination_path
+  except PermissionError:
+    log.error(f"Permission Denied -> Failed to move {source_path.name}: " f"file is either locked another application or access permission has been denied")
+    return False
+
+  except OSError as e:
+    log.error(f"OS ERROR: failed to move {source_path.name}: {e}")
+    return False
+
+  except Exception as e:
+    log.error(f"Unexpected Error: unexpected error in {source_path.name}: {e} ")
+    return False
+
+
+
+
+
+
+
+
+
+
+
+
+def organize_directory(target_dir: Path, dry_run: bool = False, log_file: Path = Path("organizer.log")) -> dict[str, int]:
+  """
+  execute the entire folder-organizing workflow from scanning to move file
+
+  returns a summary of the transfe statistics
+  """
+
+  logger = setup_logger(log_file)
+  logger.info(f"starting the directory organization process: {target_dir} (Dry-Run Mode: {dry_run})")
+
+  stats = {"total": 0, "moved": 0, "failed": 0, "skipped": 0}
+
+  files = scan_directory(target_dir)
+  stats["total"] = len(files)
+
+  if not files:
+    logger.warning(f"{target_dir} Directory is empty or contains no valid file")
+    return stats
+
+
+  for file_path in files:
+    category = get_category(file_path.suffix)
+    dest_folder = target_dir / category
+    safe_targer = resolve_collision(dest_folder, file_path.name)
+
+    is_success = move_file(file_path, safe_targer, dry_run=dry_run, logger=logger)
+
+    if is_success:
+      stats["moved"] += 1
+    else:
+      stats["failed"] += 1
+
+  logger.info(f"Done! Summary: Total={stats['total']}, " f"Success={stats['moved']}, Failed={stats['failed']}")
+
+  return stats
+

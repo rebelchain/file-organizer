@@ -6,7 +6,7 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(ROOT_DIR))
 
-from organizer import get_category, resolve_collision, scan_directory, move_file
+from organizer import get_category, resolve_collision, scan_directory, move_file, setup_logger, organize_directory
 
 
 def test_category_mapping():
@@ -23,6 +23,9 @@ def test_category_mapping():
         category = get_category(ext)
         assert category == expected, f"Fail: {filename} shoud be {expected}, but got {category}"
         print(f"PASS: {filename:<15} -> {category}")
+
+
+
 
 
 def test_collision_resolution():
@@ -105,6 +108,31 @@ def test_move_file_operations():
         assert result_real == target_path, "Return path does not match!"
         print("PASS: actual move successfully transferred files to Images folder.")
 
+
+
+
+
+
+def test_logging_and_orchestrator():
+    print("\n --- Test 5: Orchestrator & Logging System ---")
+    with tempfile.TemporaryDirectory() as temp_dir:
+        base_dir = Path(temp_dir)
+        log_path = base_dir / "test_run.log"
+
+        (base_dir / "catatan.txt").touch()
+        (base_dir / gambar.jpg).touch()
+
+        summary = organize_directory(base_dir, dry_run=False, log_file=log_path)
+
+        assert summary["total"] == 2, "number of scanned files doesn't match"
+        assert summary["moved"] == 2, "some files that failed to be moved"
+        assert log_path.exists(), "Log file is not created on the disk"
+
+
+        log_content =log_path.read_text(encoding="utf-8")
+        assert "[SUCCESS]" in log_content, "Success log is not recorded in file"
+        print(f"PASS: Log successfully written to {log_path.name}")
+        print(f"PASS: Entire orchestration flow was successful")
 
 
 
