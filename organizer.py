@@ -121,7 +121,9 @@ def move_file(source_path: Path, destination_path: Path, dry_run: bool = False, 
   try:
     destination_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # str(source_path): Although `shutil` in modern versions of Python supports `Path` objects, explicitly converting them to `str` ensures compatibility, allowing the script to run across different OS environments without issues related to type references.
     shutil.move(str(source_path), str(destination_path))
+    
     log.info(f"Moved: {source_path.name} -> {destination_path}")
     return True
 
@@ -183,4 +185,3 @@ def organize_directory(target_dir: Path, dry_run: bool = False, log_file: Path =
   logger.info(f"Done! Summary: Total={stats['total']}, " f"Success={stats['moved']}, Failed={stats['failed']}")
 
   return stats
-

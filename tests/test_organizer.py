@@ -120,7 +120,7 @@ def test_logging_and_orchestrator():
         log_path = base_dir / "test_run.log"
 
         (base_dir / "catatan.txt").touch()
-        (base_dir / gambar.jpg).touch()
+        (base_dir / "gambar.jpg").touch()
 
         summary = organize_directory(base_dir, dry_run=False, log_file=log_path)
 
