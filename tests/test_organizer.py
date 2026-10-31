@@ -52,6 +52,7 @@ def test_collision_resolution():
         print(f"PASS: second collision resolved -> {path_3.name}")
 
 
+
 def test_scanner_traversal():
     print("\n--- TEST 3: Scanner Directory Traversal ---")
     with tempfile.TemporaryDirectory() as temp_dir:
@@ -107,7 +108,6 @@ def test_move_file_operations():
         assert target_path.exists(), "target file is not found on disk"
         assert result_real == target_path, "Return path does not match!"
         print("PASS: actual move successfully transferred files to Images folder.")
-
 
 
 
