@@ -8,7 +8,7 @@ from organizer import organize_directory
 def main():
 
   parser = argparse.ArgumentParser(
-    description="Automated file organizer: merapikan file ke dalam subfolder kategori secara otomatis"
+    description="Automated file organizer: merapikan file ke dalam subfolder kategori secara otomatis",
     epilog="Example execution: python main.py C:/Users/Downloads --dry-run"
   )
 
@@ -44,7 +44,7 @@ def main():
     print(f"\n Failed: {e}")
     sys.exit(1)
 
-  except NotADirectory as e:
+  except NotADirectoryError as e:
 
     print(f"\n Failed: {e}")
     sys.exit(1)
