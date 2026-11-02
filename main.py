@@ -15,7 +15,13 @@ def main():
   parser.add_argument(
     "path",
     type=str,
-    help="Hanya jalankan simulasi pencatatan (tidak akan memindahkan file sungguhan)"
+    help="Path to folder target that will be organized"
+  )
+
+  parser.add_argument(
+    "--dry-run",
+    action="store_true",
+    help="Only simulate the file organization process without actually moving files. Useful for testing and previewing changes.",
   )
 
   args = parser.parse_args()
